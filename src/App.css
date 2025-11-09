@@ -70,12 +70,23 @@
   transition: all 0.2s;
 }
 
-.btn-save {
+.btn-import {
+  background-color: #4CAF50;
+  color: white;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-import:hover {
+  background-color: #45a049;
+}
+
+.btn-export-md {
   background-color: #4CAF50;
   color: white;
 }
 
-.btn-save:hover {
+.btn-export-md:hover {
   background-color: #45a049;
 }
 

@@ -59,10 +59,139 @@ function App() {
     handleChange(field, e.target.value)
   }
 
-  // 保存ハンドラ
-  const handleSave = () => {
-    localStorage.setItem('leanCanvasData', JSON.stringify(canvasData))
-    alert('保存しました')
+  // Markdownエクスポートハンドラ
+  const handleExportMarkdown = () => {
+    const markdown = `# ${canvasData.productName || 'リーンキャンバス'}
+
+## 課題
+${canvasData.problem}
+
+## 代替品
+${canvasData.existingAlternatives}
+
+## ソリューション
+${canvasData.solution}
+
+## 主要指標
+${canvasData.keyMetrics}
+
+## 独自の価値提案
+${canvasData.uniqueValueProposition}
+
+## ハイレベルコンセプト
+${canvasData.highLevelConcept}
+
+## 圧倒的な優位性
+${canvasData.unfairAdvantage}
+
+## チャネル
+${canvasData.channels}
+
+## 顧客セグメント
+${canvasData.customerSegments}
+
+## アーリーアダプター
+${canvasData.earlyAdopters}
+
+## コスト構造
+${canvasData.costStructure}
+
+## 収益の流れ
+${canvasData.revenueStreams}
+`
+
+    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    const filename = canvasData.productName
+      ? `${canvasData.productName.replace(/[^\w\s-]/g, '')}-lean-canvas.md`
+      : 'lean-canvas.md'
+    link.download = filename
+    link.href = url
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // Markdownインポートハンドラ
+  const handleImportMarkdown = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const text = e.target?.result
+      if (typeof text !== 'string') return
+
+      try {
+        // Markdownをパース
+        const lines = text.split('\n')
+        const newData = { ...canvasData }
+
+        let currentSection = ''
+        let currentContent = []
+
+        lines.forEach(line => {
+          if (line.startsWith('# ')) {
+            // プロダクト名
+            newData.productName = line.substring(2).trim()
+          } else if (line.startsWith('## ')) {
+            // セクションの切り替え
+            if (currentSection && currentContent.length > 0) {
+              const content = currentContent.join('\n').trim()
+              switch (currentSection) {
+                case '課題': newData.problem = content; break
+                case '代替品': newData.existingAlternatives = content; break
+                case 'ソリューション': newData.solution = content; break
+                case '主要指標': newData.keyMetrics = content; break
+                case '独自の価値提案': newData.uniqueValueProposition = content; break
+                case 'ハイレベルコンセプト': newData.highLevelConcept = content; break
+                case '圧倒的な優位性': newData.unfairAdvantage = content; break
+                case 'チャネル': newData.channels = content; break
+                case '顧客セグメント': newData.customerSegments = content; break
+                case 'アーリーアダプター': newData.earlyAdopters = content; break
+                case 'コスト構造': newData.costStructure = content; break
+                case '収益の流れ': newData.revenueStreams = content; break
+              }
+            }
+            currentSection = line.substring(3).trim()
+            currentContent = []
+          } else if (currentSection && line.trim()) {
+            currentContent.push(line)
+          }
+        })
+
+        // 最後のセクション
+        if (currentSection && currentContent.length > 0) {
+          const content = currentContent.join('\n').trim()
+          switch (currentSection) {
+            case '課題': newData.problem = content; break
+            case '代替品': newData.existingAlternatives = content; break
+            case 'ソリューション': newData.solution = content; break
+            case '主要指標': newData.keyMetrics = content; break
+            case '独自の価値提案': newData.uniqueValueProposition = content; break
+            case 'ハイレベルコンセプト': newData.highLevelConcept = content; break
+            case '圧倒的な優位性': newData.unfairAdvantage = content; break
+            case 'チャネル': newData.channels = content; break
+            case '顧客セグメント': newData.customerSegments = content; break
+            case 'アーリーアダプター': newData.earlyAdopters = content; break
+            case 'コスト構造': newData.costStructure = content; break
+            case '収益の流れ': newData.revenueStreams = content; break
+          }
+        }
+
+        setCanvasData(newData)
+        // LocalStorageにも保存
+        localStorage.setItem('leanCanvasData', JSON.stringify(newData))
+        alert('インポートしました')
+      } catch (error) {
+        console.error('インポートエラー:', error)
+        alert('ファイルの読み込みに失敗しました')
+      }
+    }
+
+    reader.readAsText(file)
+    // input要素をリセット
+    event.target.value = ''
   }
 
   // クリアハンドラ
@@ -136,7 +265,15 @@ function App() {
           />
         </div>
         <div className="buttons">
-          <button onClick={handleSave} className="btn btn-save">保存</button>
+          <label htmlFor="import-file" className="btn btn-import">インポート</label>
+          <input
+            id="import-file"
+            type="file"
+            accept=".md,.markdown"
+            onChange={handleImportMarkdown}
+            style={{ display: 'none' }}
+          />
+          <button onClick={handleExportMarkdown} className="btn btn-export-md">エクスポート</button>
           <button onClick={handleClear} className="btn btn-clear">クリア</button>
           <button onClick={handleExportPNG} className="btn btn-export">PNG保存</button>
           <button onClick={handlePrint} className="btn btn-print">印刷</button>
