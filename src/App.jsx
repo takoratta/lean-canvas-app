@@ -2,10 +2,39 @@ import { useState, useEffect, useRef } from 'react'
 import html2canvas from 'html2canvas'
 import pptxgen from 'pptxgenjs'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import * as Popover from '@radix-ui/react-popover'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import './App.css'
+import hintContents from './data/hints.json'
+
+// ヒントPopoverコンポーネント
+function HintPopover({ itemName }) {
+  return (
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <button className="hint-icon" aria-label={`${itemName}のヒントを表示`}>?</button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content className="popover-content" sideOffset={5}>
+          <div className="popover-title">{itemName}のヒント</div>
+          <div className="popover-description">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {hintContents[itemName] || 'ヒントが見つかりません'}
+            </ReactMarkdown>
+          </div>
+          <Popover.Arrow className="popover-arrow" />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  )
+}
 
 function App() {
   const canvasRef = useRef(null)
+
+  // 各セルの編集状態を管理
+  const [editingField, setEditingField] = useState(null)
 
   // Lean Canvasの各セクションの状態管理
   const [canvasData, setCanvasData] = useState({
@@ -53,6 +82,22 @@ function App() {
       ...prev,
       [field]: value
     }))
+  }
+
+  // 編集モードに入る
+  const handleEditStart = (field) => {
+    setEditingField(field)
+  }
+
+  // 編集モードを終了
+  const handleEditEnd = () => {
+    setEditingField(null)
+  }
+
+  // Markdownテキストを前処理（#の後にスペースがない場合は追加）
+  const preprocessMarkdown = (text) => {
+    if (!text) return text
+    return text.replace(/^(#{1,6})([^\s#])/gm, '$1 $2')
   }
 
   // textarea入力時のハンドラ
@@ -481,110 +526,350 @@ ${canvasData.revenueStreams}
       <div className="lean-canvas" ref={canvasRef}>
         {/* 左列：課題 / 代替品 */}
         <div className="canvas-cell cell-problem">
-          <div className="cell-header">課題</div>
-          <textarea
-            value={canvasData.problem}
-            onInput={(e) => handleTextareaInput(e, 'problem')}
-            placeholder="解決すべき課題トップ3を記入"
-          />
+          <div className="cell-header">
+            課題
+            <HintPopover itemName="課題" />
+          </div>
+          {editingField === 'problem' ? (
+            <textarea
+              value={canvasData.problem}
+              onInput={(e) => handleTextareaInput(e, 'problem')}
+              onBlur={handleEditEnd}
+              placeholder="解決すべき課題トップ3を記入"
+              autoFocus
+            />
+          ) : (
+            <div
+              className="markdown-content"
+              onClick={() => handleEditStart('problem')}
+            >
+              {canvasData.problem ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {preprocessMarkdown(canvasData.problem)}
+                </ReactMarkdown>
+              ) : (
+                <div className="placeholder-text">解決すべき課題トップ3を記入</div>
+              )}
+            </div>
+          )}
         </div>
         <div className="canvas-cell cell-alternatives">
-          <div className="cell-header">代替品</div>
-          <textarea
-            value={canvasData.existingAlternatives}
-            onInput={(e) => handleTextareaInput(e, 'existingAlternatives')}
-            placeholder="現在の代替手段"
-          />
+          <div className="cell-header">
+            代替品
+            <HintPopover itemName="代替品" />
+          </div>
+          {editingField === 'existingAlternatives' ? (
+            <textarea
+              value={canvasData.existingAlternatives}
+              onInput={(e) => handleTextareaInput(e, 'existingAlternatives')}
+              onBlur={handleEditEnd}
+              placeholder="現在の代替手段"
+              autoFocus
+            />
+          ) : (
+            <div
+              className="markdown-content"
+              onClick={() => handleEditStart('existingAlternatives')}
+            >
+              {canvasData.existingAlternatives ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {preprocessMarkdown(canvasData.existingAlternatives)}
+                </ReactMarkdown>
+              ) : (
+                <div className="placeholder-text">現在の代替手段</div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 中央左列：ソリューション / 主要指標 */}
         <div className="canvas-cell cell-solution">
-          <div className="cell-header">ソリューション</div>
-          <textarea
-            value={canvasData.solution}
-            onInput={(e) => handleTextareaInput(e, 'solution')}
-            placeholder="課題に対する解決策"
-          />
+          <div className="cell-header">
+            ソリューション
+            <HintPopover itemName="ソリューション" />
+          </div>
+          {editingField === 'solution' ? (
+            <textarea
+              value={canvasData.solution}
+              onInput={(e) => handleTextareaInput(e, 'solution')}
+              onBlur={handleEditEnd}
+              placeholder="課題に対する解決策"
+              autoFocus
+            />
+          ) : (
+            <div
+              className="markdown-content"
+              onClick={() => handleEditStart('solution')}
+            >
+              {canvasData.solution ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {preprocessMarkdown(canvasData.solution)}
+                </ReactMarkdown>
+              ) : (
+                <div className="placeholder-text">課題に対する解決策</div>
+              )}
+            </div>
+          )}
         </div>
         <div className="canvas-cell cell-metrics">
-          <div className="cell-header">主要指標</div>
-          <textarea
-            value={canvasData.keyMetrics}
-            onInput={(e) => handleTextareaInput(e, 'keyMetrics')}
-            placeholder="測定すべき重要な指標"
-          />
+          <div className="cell-header">
+            主要指標
+            <HintPopover itemName="主要指標" />
+          </div>
+          {editingField === 'keyMetrics' ? (
+            <textarea
+              value={canvasData.keyMetrics}
+              onInput={(e) => handleTextareaInput(e, 'keyMetrics')}
+              onBlur={handleEditEnd}
+              placeholder="測定すべき重要な指標"
+              autoFocus
+            />
+          ) : (
+            <div
+              className="markdown-content"
+              onClick={() => handleEditStart('keyMetrics')}
+            >
+              {canvasData.keyMetrics ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {preprocessMarkdown(canvasData.keyMetrics)}
+                </ReactMarkdown>
+              ) : (
+                <div className="placeholder-text">測定すべき重要な指標</div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 中央列：独自の価値提案 / ハイレベルコンセプト */}
         <div className="canvas-cell cell-value">
-          <div className="cell-header">独自の価値提案</div>
-          <textarea
-            value={canvasData.uniqueValueProposition}
-            onInput={(e) => handleTextareaInput(e, 'uniqueValueProposition')}
-            placeholder="明確で説得力のあるメッセージ"
-          />
+          <div className="cell-header">
+            独自の価値提案
+            <HintPopover itemName="独自の価値提案" />
+          </div>
+          {editingField === 'uniqueValueProposition' ? (
+            <textarea
+              value={canvasData.uniqueValueProposition}
+              onInput={(e) => handleTextareaInput(e, 'uniqueValueProposition')}
+              onBlur={handleEditEnd}
+              placeholder="明確で説得力のあるメッセージ"
+              autoFocus
+            />
+          ) : (
+            <div
+              className="markdown-content"
+              onClick={() => handleEditStart('uniqueValueProposition')}
+            >
+              {canvasData.uniqueValueProposition ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {preprocessMarkdown(canvasData.uniqueValueProposition)}
+                </ReactMarkdown>
+              ) : (
+                <div className="placeholder-text">明確で説得力のあるメッセージ</div>
+              )}
+            </div>
+          )}
         </div>
         <div className="canvas-cell cell-high-level-concept">
-          <div className="cell-header">ハイレベルコンセプト</div>
-          <textarea
-            value={canvasData.highLevelConcept}
-            onInput={(e) => handleTextareaInput(e, 'highLevelConcept')}
-            placeholder="簡潔に言い換えると..."
-          />
+          <div className="cell-header">
+            ハイレベルコンセプト
+            <HintPopover itemName="ハイレベルコンセプト" />
+          </div>
+          {editingField === 'highLevelConcept' ? (
+            <textarea
+              value={canvasData.highLevelConcept}
+              onInput={(e) => handleTextareaInput(e, 'highLevelConcept')}
+              onBlur={handleEditEnd}
+              placeholder="簡潔に言い換えると..."
+              autoFocus
+            />
+          ) : (
+            <div
+              className="markdown-content"
+              onClick={() => handleEditStart('highLevelConcept')}
+            >
+              {canvasData.highLevelConcept ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {preprocessMarkdown(canvasData.highLevelConcept)}
+                </ReactMarkdown>
+              ) : (
+                <div className="placeholder-text">簡潔に言い換えると...</div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 中央右列：圧倒的な優位性 / チャネル */}
         <div className="canvas-cell cell-advantage">
-          <div className="cell-header">圧倒的な優位性</div>
-          <textarea
-            value={canvasData.unfairAdvantage}
-            onInput={(e) => handleTextareaInput(e, 'unfairAdvantage')}
-            placeholder="簡単に真似できない優位性"
-          />
+          <div className="cell-header">
+            圧倒的な優位性
+            <HintPopover itemName="圧倒的な優位性" />
+          </div>
+          {editingField === 'unfairAdvantage' ? (
+            <textarea
+              value={canvasData.unfairAdvantage}
+              onInput={(e) => handleTextareaInput(e, 'unfairAdvantage')}
+              onBlur={handleEditEnd}
+              placeholder="簡単に真似できない優位性"
+              autoFocus
+            />
+          ) : (
+            <div
+              className="markdown-content"
+              onClick={() => handleEditStart('unfairAdvantage')}
+            >
+              {canvasData.unfairAdvantage ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {preprocessMarkdown(canvasData.unfairAdvantage)}
+                </ReactMarkdown>
+              ) : (
+                <div className="placeholder-text">簡単に真似できない優位性</div>
+              )}
+            </div>
+          )}
         </div>
         <div className="canvas-cell cell-channels">
-          <div className="cell-header">チャネル</div>
-          <textarea
-            value={canvasData.channels}
-            onInput={(e) => handleTextareaInput(e, 'channels')}
-            placeholder="顧客へのリーチ方法"
-          />
+          <div className="cell-header">
+            チャネル
+            <HintPopover itemName="チャネル" />
+          </div>
+          {editingField === 'channels' ? (
+            <textarea
+              value={canvasData.channels}
+              onInput={(e) => handleTextareaInput(e, 'channels')}
+              onBlur={handleEditEnd}
+              placeholder="顧客へのリーチ方法"
+              autoFocus
+            />
+          ) : (
+            <div
+              className="markdown-content"
+              onClick={() => handleEditStart('channels')}
+            >
+              {canvasData.channels ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {preprocessMarkdown(canvasData.channels)}
+                </ReactMarkdown>
+              ) : (
+                <div className="placeholder-text">顧客へのリーチ方法</div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 右列：顧客セグメント / アーリーアダプター */}
         <div className="canvas-cell cell-customers">
-          <div className="cell-header">顧客セグメント</div>
-          <textarea
-            value={canvasData.customerSegments}
-            onInput={(e) => handleTextareaInput(e, 'customerSegments')}
-            placeholder="ターゲット顧客"
-          />
+          <div className="cell-header">
+            顧客セグメント
+            <HintPopover itemName="顧客セグメント" />
+          </div>
+          {editingField === 'customerSegments' ? (
+            <textarea
+              value={canvasData.customerSegments}
+              onInput={(e) => handleTextareaInput(e, 'customerSegments')}
+              onBlur={handleEditEnd}
+              placeholder="ターゲット顧客"
+              autoFocus
+            />
+          ) : (
+            <div
+              className="markdown-content"
+              onClick={() => handleEditStart('customerSegments')}
+            >
+              {canvasData.customerSegments ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {preprocessMarkdown(canvasData.customerSegments)}
+                </ReactMarkdown>
+              ) : (
+                <div className="placeholder-text">ターゲット顧客</div>
+              )}
+            </div>
+          )}
         </div>
         <div className="canvas-cell cell-early-adopters">
-          <div className="cell-header">アーリーアダプター</div>
-          <textarea
-            value={canvasData.earlyAdopters}
-            onInput={(e) => handleTextareaInput(e, 'earlyAdopters')}
-            placeholder="最初の顧客"
-          />
+          <div className="cell-header">
+            アーリーアダプター
+            <HintPopover itemName="アーリーアダプター" />
+          </div>
+          {editingField === 'earlyAdopters' ? (
+            <textarea
+              value={canvasData.earlyAdopters}
+              onInput={(e) => handleTextareaInput(e, 'earlyAdopters')}
+              onBlur={handleEditEnd}
+              placeholder="最初の顧客"
+              autoFocus
+            />
+          ) : (
+            <div
+              className="markdown-content"
+              onClick={() => handleEditStart('earlyAdopters')}
+            >
+              {canvasData.earlyAdopters ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {preprocessMarkdown(canvasData.earlyAdopters)}
+                </ReactMarkdown>
+              ) : (
+                <div className="placeholder-text">最初の顧客</div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 下段：コスト構造 / 収益の流れ */}
         <div className="canvas-cell cell-cost">
-          <div className="cell-header">コスト構造</div>
-          <textarea
-            value={canvasData.costStructure}
-            onInput={(e) => handleTextareaInput(e, 'costStructure')}
-            placeholder="主要なコスト"
-          />
+          <div className="cell-header">
+            コスト構造
+            <HintPopover itemName="コスト構造" />
+          </div>
+          {editingField === 'costStructure' ? (
+            <textarea
+              value={canvasData.costStructure}
+              onInput={(e) => handleTextareaInput(e, 'costStructure')}
+              onBlur={handleEditEnd}
+              placeholder="主要なコスト"
+              autoFocus
+            />
+          ) : (
+            <div
+              className="markdown-content"
+              onClick={() => handleEditStart('costStructure')}
+            >
+              {canvasData.costStructure ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {preprocessMarkdown(canvasData.costStructure)}
+                </ReactMarkdown>
+              ) : (
+                <div className="placeholder-text">主要なコスト</div>
+              )}
+            </div>
+          )}
         </div>
         <div className="canvas-cell cell-revenue">
-          <div className="cell-header">収益の流れ</div>
-          <textarea
-            value={canvasData.revenueStreams}
-            onInput={(e) => handleTextareaInput(e, 'revenueStreams')}
-            placeholder="収益源"
-          />
+          <div className="cell-header">
+            収益の流れ
+            <HintPopover itemName="収益の流れ" />
+          </div>
+          {editingField === 'revenueStreams' ? (
+            <textarea
+              value={canvasData.revenueStreams}
+              onInput={(e) => handleTextareaInput(e, 'revenueStreams')}
+              onBlur={handleEditEnd}
+              placeholder="収益源"
+              autoFocus
+            />
+          ) : (
+            <div
+              className="markdown-content"
+              onClick={() => handleEditStart('revenueStreams')}
+            >
+              {canvasData.revenueStreams ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {preprocessMarkdown(canvasData.revenueStreams)}
+                </ReactMarkdown>
+              ) : (
+                <div className="placeholder-text">収益源</div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -243,6 +243,32 @@
   text-align: center;
   color: #333;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ヒントアイコン */
+.hint-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.hint-icon:hover {
+  background-color: #45a049;
 }
 
 .canvas-cell textarea {
@@ -262,6 +288,217 @@
 .canvas-cell textarea::placeholder {
   color: #999;
   font-style: italic;
+}
+
+/* Markdownコンテンツ表示エリア */
+.markdown-content {
+  padding: 10px;
+  min-height: 100px;
+  cursor: text;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.markdown-content:hover {
+  background-color: #f9f9f9;
+}
+
+/* プレースホルダー表示 */
+.placeholder-text {
+  color: #999;
+  font-style: italic;
+}
+
+/* Markdown要素のスタイリング */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin: 0.5em 0 0.3em 0;
+  font-weight: 600;
+}
+
+.markdown-content h1 { font-size: 1.4em; }
+.markdown-content h2 { font-size: 1.3em; }
+.markdown-content h3 { font-size: 1.2em; }
+.markdown-content h4 { font-size: 1.1em; }
+
+.markdown-content p {
+  margin: 0.5em 0;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.markdown-content li {
+  margin: 0.2em 0;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+.markdown-content code {
+  background-color: #f4f4f4;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.markdown-content pre {
+  background-color: #f4f4f4;
+  padding: 0.5em;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.markdown-content blockquote {
+  border-left: 3px solid #ddd;
+  padding-left: 1em;
+  margin: 0.5em 0;
+  color: #666;
+}
+
+.markdown-content a {
+  color: #4CAF50;
+  text-decoration: none;
+}
+
+.markdown-content a:hover {
+  text-decoration: underline;
+}
+
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5em 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid #ddd;
+  padding: 0.3em 0.5em;
+  text-align: left;
+}
+
+.markdown-content th {
+  background-color: #f4f4f4;
+  font-weight: 600;
+}
+
+.markdown-content hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 1em 0;
+}
+
+.markdown-content > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-content > *:last-child {
+  margin-bottom: 0;
+}
+
+/* ポップオーバーコンテンツ */
+.popover-content {
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #d0d0d0;
+  padding: 16px;
+  width: 380px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 10px 38px -10px rgba(0, 0, 0, 0.45),
+    0 10px 20px -15px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  animation: slideUpAndFade 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpAndFade {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ポップオーバータイトル */
+.popover-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+/* ポップオーバー説明 */
+.popover-description {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #666;
+}
+
+/* ポップオーバー内のMarkdown要素 */
+.popover-description h3 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 10px 0 5px 0;
+  color: #333;
+}
+
+.popover-description p {
+  margin: 6px 0;
+}
+
+.popover-description ul,
+.popover-description ol {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+.popover-description li {
+  margin: 3px 0;
+}
+
+.popover-description strong {
+  font-weight: 600;
+  color: #333;
+}
+
+.popover-description > *:first-child {
+  margin-top: 0;
+}
+
+.popover-description > *:last-child {
+  margin-bottom: 0;
+}
+
+/* ポップオーバーの矢印 */
+.popover-arrow {
+  fill: white;
 }
 
 /* 左列：顧客の課題（上半分） */
