@@ -108,6 +108,15 @@
   background-color: #F57C00;
 }
 
+.btn-export-pptx {
+  background-color: #9C27B0;
+  color: white;
+}
+
+.btn-export-pptx:hover {
+  background-color: #7B1FA2;
+}
+
 .btn-print {
   background-color: #2196F3;
   color: white;
@@ -115,6 +124,86 @@
 
 .btn-print:hover {
   background-color: #0b7dda;
+}
+
+.btn-file-menu {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.btn-file-menu:hover {
+  background-color: #45a049;
+}
+
+/* ファイルメニューのコンテナ */
+.file-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* ドロップダウンメニュー */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 5px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* メニュー項目 */
+.menu-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: background-color 0.2s;
+  display: block;
+  text-decoration: none;
+  user-select: none;
+  outline: none;
+  border: none;
+}
+
+.menu-item:hover,
+.menu-item:focus {
+  background-color: #f5f5f5;
+}
+
+.menu-item[data-highlighted] {
+  background-color: #f5f5f5;
+}
+
+/* メニュー区切り線 */
+.menu-divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 4px 0;
+}
+
+/* サブメニューの親要素 */
+.submenu-parent {
+  position: relative;
+}
+
+.submenu-parent:focus {
+  outline: none;
+}
+
+/* サブメニュー（カスケードメニュー） */
+.submenu {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  min-width: 160px;
+  z-index: 1001;
+  overflow: hidden;
 }
 
 /* Lean Canvasのグリッドレイアウト */

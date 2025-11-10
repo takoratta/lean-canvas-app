@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import html2canvas from 'html2canvas'
+import pptxgen from 'pptxgenjs'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import './App.css'
 
 function App() {
@@ -103,9 +105,9 @@ ${canvasData.revenueStreams}
     const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    const filename = canvasData.productName
-      ? `${canvasData.productName.replace(/[^\w\s-]/g, '')}-lean-canvas.md`
-      : 'lean-canvas.md'
+    const filename = canvasData.productName.trim()
+      ? `${canvasData.productName.trim()}.md`
+      : 'leancanvas.md'
     link.download = filename
     link.href = url
     link.click()
@@ -238,8 +240,10 @@ ${canvasData.revenueStreams}
         if (blob) {
           const url = URL.createObjectURL(blob)
           const link = document.createElement('a')
-          const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
-          link.download = `lean-canvas-${timestamp}.png`
+          const filename = canvasData.productName.trim()
+            ? `${canvasData.productName.trim()}.png`
+            : 'leancanvas.png'
+          link.download = filename
           link.href = url
           link.click()
           URL.revokeObjectURL(url)
@@ -248,6 +252,157 @@ ${canvasData.revenueStreams}
     } catch (error) {
       console.error('PNG保存エラー:', error)
       alert('PNG保存に失敗しました')
+    }
+  }
+
+  // PowerPoint/Googleスライドエクスポートハンドラ
+  const handleExportPptx = () => {
+    try {
+      const pptx = new pptxgen()
+
+      // スライドのサイズ設定（16:9）
+      pptx.layout = 'LAYOUT_16x9'
+
+      const slide = pptx.addSlide()
+
+      // タイトルを追加
+      slide.addText(canvasData.productName || 'リーンキャンバス', {
+        x: 0.5,
+        y: 0.3,
+        w: 9,
+        h: 0.5,
+        fontSize: 24,
+        bold: true,
+        color: '363636',
+        align: 'center'
+      })
+
+      // コンテンツの長さを計算してフォントサイズを決定
+      const calculateFontSize = (text) => {
+        const length = text.length
+        if (length < 100) return 10
+        if (length < 200) return 9
+        if (length < 300) return 8
+        return 7
+      }
+
+      // テーブル構造でキャンバスを作成
+      const tableData = [
+        // 行1（ヘッダー）
+        [
+          { text: '課題', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center', valign: 'middle' } },
+          { text: 'ソリューション', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center', valign: 'middle' } },
+          { text: '独自の価値提案', options: { fill: 'FFF4E6', bold: true, fontSize: 10, align: 'center', valign: 'middle', rowspan: 2 } },
+          { text: '圧倒的な優位性', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center', valign: 'middle' } },
+          { text: '顧客セグメント', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center', valign: 'middle' } }
+        ],
+        // 行2（上半分コンテンツ）
+        [
+          { text: canvasData.problem || '', options: { fontSize: calculateFontSize(canvasData.problem), valign: 'top' } },
+          { text: canvasData.solution || '', options: { fontSize: calculateFontSize(canvasData.solution), valign: 'top' } },
+          null, // 価値提案はrowspanで処理
+          { text: canvasData.unfairAdvantage || '', options: { fontSize: calculateFontSize(canvasData.unfairAdvantage), valign: 'top' } },
+          { text: canvasData.customerSegments || '', options: { fontSize: calculateFontSize(canvasData.customerSegments), valign: 'top' } }
+        ],
+        // 行3（下半分ヘッダー）
+        [
+          { text: '代替品', options: { fontSize: 8, color: '666666', valign: 'top' } },
+          { text: '主要指標', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center', valign: 'middle' } },
+          { text: 'ハイレベルコンセプト', options: { fontSize: 8, color: '666666', valign: 'top' } },
+          { text: 'チャネル', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center', valign: 'middle' } },
+          { text: 'アーリーアダプター', options: { fontSize: 8, color: '666666', valign: 'top' } }
+        ],
+        // 行4（下半分コンテンツ）
+        [
+          { text: canvasData.existingAlternatives || '', options: { fontSize: calculateFontSize(canvasData.existingAlternatives), valign: 'top' } },
+          { text: canvasData.keyMetrics || '', options: { fontSize: calculateFontSize(canvasData.keyMetrics), valign: 'top' } },
+          { text: canvasData.highLevelConcept || '', options: { fontSize: calculateFontSize(canvasData.highLevelConcept), valign: 'top' } },
+          { text: canvasData.channels || '', options: { fontSize: calculateFontSize(canvasData.channels), valign: 'top' } },
+          { text: canvasData.earlyAdopters || '', options: { fontSize: calculateFontSize(canvasData.earlyAdopters), valign: 'top' } }
+        ],
+        // 行5（下段ヘッダー）
+        [
+          { text: 'コスト構造', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center', valign: 'middle', colspan: 3 } },
+          null,
+          null,
+          { text: '収益の流れ', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center', valign: 'middle', colspan: 2 } },
+          null
+        ],
+        // 行6（下段コンテンツ）
+        [
+          { text: canvasData.costStructure || '', options: { fontSize: calculateFontSize(canvasData.costStructure), valign: 'top', colspan: 3 } },
+          null,
+          null,
+          { text: canvasData.revenueStreams || '', options: { fontSize: calculateFontSize(canvasData.revenueStreams), valign: 'top', colspan: 2 } },
+          null
+        ]
+      ]
+
+      // 価値提案セルを正しく処理するため再構築
+      const rows = [
+        // Row 1: Headers
+        [
+          { text: '課題', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center' } },
+          { text: 'ソリューション', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center' } },
+          { text: '独自の価値提案', options: { fill: 'FFF4E6', bold: true, fontSize: 10, align: 'center' } },
+          { text: '圧倒的な優位性', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center' } },
+          { text: '顧客セグメント', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center' } }
+        ],
+        // Row 2: Content top
+        [
+          { text: canvasData.problem || '', options: { fontSize: calculateFontSize(canvasData.problem), valign: 'top', border: [{ pt: 1, color: '333333' }, { pt: 1, color: '333333' }, { pt: 0.5, color: 'CCCCCC' }, { pt: 1, color: '333333' }] } },
+          { text: canvasData.solution || '', options: { fontSize: calculateFontSize(canvasData.solution), valign: 'top' } },
+          { text: canvasData.uniqueValueProposition || '', options: { fontSize: calculateFontSize(canvasData.uniqueValueProposition), valign: 'top', fill: 'FFF4E6', border: [{ pt: 1, color: '333333' }, { pt: 1, color: '333333' }, { pt: 0.5, color: 'CCCCCC' }, { pt: 1, color: '333333' }] } },
+          { text: canvasData.unfairAdvantage || '', options: { fontSize: calculateFontSize(canvasData.unfairAdvantage), valign: 'top' } },
+          { text: canvasData.customerSegments || '', options: { fontSize: calculateFontSize(canvasData.customerSegments), valign: 'top', border: [{ pt: 1, color: '333333' }, { pt: 1, color: '333333' }, { pt: 0.5, color: 'CCCCCC' }, { pt: 1, color: '333333' }] } }
+        ],
+        // Row 3: Sub headers
+        [
+          { text: '代替品', options: { fontSize: 10, color: '333333', bold: true, align: 'center', border: [{ pt: 1, color: '333333' }, { pt: 1, color: '333333' }, { pt: 0 }, { pt: 1, color: '333333' }] } },
+          { text: '主要指標', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center' } },
+          { text: 'ハイレベルコンセプト', options: { fontSize: 10, color: '333333', bold: true, align: 'center', border: [{ pt: 1, color: '333333' }, { pt: 1, color: '333333' }, { pt: 0 }, { pt: 1, color: '333333' }] } },
+          { text: 'チャネル', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center' } },
+          { text: 'アーリーアダプター', options: { fontSize: 10, color: '333333', bold: true, align: 'center', border: [{ pt: 1, color: '333333' }, { pt: 1, color: '333333' }, { pt: 0 }, { pt: 1, color: '333333' }] } }
+        ],
+        // Row 4: Content bottom
+        [
+          { text: canvasData.existingAlternatives || '', options: { fontSize: calculateFontSize(canvasData.existingAlternatives), valign: 'top' } },
+          { text: canvasData.keyMetrics || '', options: { fontSize: calculateFontSize(canvasData.keyMetrics), valign: 'top' } },
+          { text: canvasData.highLevelConcept || '', options: { fontSize: calculateFontSize(canvasData.highLevelConcept), valign: 'top', fill: 'FFF4E6' } },
+          { text: canvasData.channels || '', options: { fontSize: calculateFontSize(canvasData.channels), valign: 'top' } },
+          { text: canvasData.earlyAdopters || '', options: { fontSize: calculateFontSize(canvasData.earlyAdopters), valign: 'top' } }
+        ],
+        // Row 5: Bottom section headers
+        [
+          { text: 'コスト構造', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center', colspan: 3 } },
+          { text: '収益の流れ', options: { fill: 'E8F4F8', bold: true, fontSize: 10, align: 'center', colspan: 2 } }
+        ],
+        // Row 6: Bottom section content
+        [
+          { text: canvasData.costStructure || '', options: { fontSize: calculateFontSize(canvasData.costStructure), valign: 'top', colspan: 3 } },
+          { text: canvasData.revenueStreams || '', options: { fontSize: calculateFontSize(canvasData.revenueStreams), valign: 'top', colspan: 2 } }
+        ]
+      ]
+
+      slide.addTable(rows, {
+        x: 0.5,
+        y: 1,
+        w: 9,
+        h: 4.5,
+        border: { pt: 1, color: '333333' },
+        colW: [1.8, 1.8, 1.8, 1.8, 1.8],
+        rowH: [0.25, 0.8, 0.25, 0.8, 0.25, 0.8] // Minimal heights for header rows (0, 2, 4), auto for content
+      })
+
+      // ファイル名を生成
+      const filename = canvasData.productName.trim()
+        ? `${canvasData.productName.trim()}.pptx`
+        : 'leancanvas.pptx'
+
+      pptx.writeFile({ fileName: filename })
+    } catch (error) {
+      console.error('PowerPoint保存エラー:', error)
+      alert('PowerPoint保存に失敗しました')
     }
   }
 
@@ -261,11 +416,10 @@ ${canvasData.revenueStreams}
             className="product-name-input"
             value={canvasData.productName}
             onChange={(e) => handleChange('productName', e.target.value)}
-            placeholder="プロダクト名を入力"
+            placeholder="ビジネスやプロダクトを入力"
           />
         </div>
         <div className="buttons">
-          <label htmlFor="import-file" className="btn btn-import">インポート</label>
           <input
             id="import-file"
             type="file"
@@ -273,10 +427,54 @@ ${canvasData.revenueStreams}
             onChange={handleImportMarkdown}
             style={{ display: 'none' }}
           />
-          <button onClick={handleExportMarkdown} className="btn btn-export-md">エクスポート</button>
+
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <button className="btn btn-file-menu">
+                ファイル ▼
+              </button>
+            </DropdownMenu.Trigger>
+
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content className="dropdown-menu" sideOffset={5}>
+                <DropdownMenu.Item className="menu-item" onSelect={() => {
+                  document.getElementById('import-file').click()
+                }}>
+                  インポート
+                </DropdownMenu.Item>
+
+                <DropdownMenu.Item className="menu-item" onSelect={handleExportMarkdown}>
+                  エクスポート
+                </DropdownMenu.Item>
+
+                <DropdownMenu.Separator className="menu-divider" />
+
+                <DropdownMenu.Sub>
+                  <DropdownMenu.SubTrigger className="menu-item submenu-parent">
+                    保存 ▶
+                  </DropdownMenu.SubTrigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.SubContent className="submenu" sideOffset={2} alignOffset={-5}>
+                      <DropdownMenu.Item className="menu-item" onSelect={handleExportPNG}>
+                        PNG保存
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item className="menu-item" onSelect={handleExportPptx}>
+                        スライド保存
+                      </DropdownMenu.Item>
+                    </DropdownMenu.SubContent>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Sub>
+
+                <DropdownMenu.Separator className="menu-divider" />
+
+                <DropdownMenu.Item className="menu-item" onSelect={handlePrint}>
+                  印刷
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+
           <button onClick={handleClear} className="btn btn-clear">クリア</button>
-          <button onClick={handleExportPNG} className="btn btn-export">PNG保存</button>
-          <button onClick={handlePrint} className="btn btn-print">印刷</button>
         </div>
       </header>
 
